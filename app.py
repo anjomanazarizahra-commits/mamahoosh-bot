@@ -41,8 +41,6 @@ requests.get(f"https://api.telegram.org/bot{token}/setWebhook?url={url}/webhook"
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_text}
-        ]
-    }
 
 
     reply = ask_ai(text)
