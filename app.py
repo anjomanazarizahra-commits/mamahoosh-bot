@@ -44,21 +44,6 @@ requests.get(f"https://api.telegram.org/bot{token}/setWebhook?url={url}/webhook"
         ]
     }
 
-    res = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers=headers,
-        json=payload
-    )
-
-    return res.json()["choices"][0]["message"]["content"]
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    data = request.get_json()
-
-    message = data["message"]
-    chat_id = message["chat"]["id"]
-    text = message.get("text", "")
 
     reply = ask_ai(text)
 
