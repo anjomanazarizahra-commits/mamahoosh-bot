@@ -31,21 +31,17 @@ def send_message(chat_id, text):
 # ---------------------------
 def ask_ai(user_text):
     try:
-        r = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "تو یک متخصص حرفه‌ای زنان و مامایی هستی. "
-                            "به سوالات بارداری، ناباروری، هورمون‌ها، آزمایش‌ها و سونوگرافی پاسخ علمی و قابل فهم بده. "
-                            "هیچ تشخیص قطعی نده. فقط تفسیر و راهنمایی بده و علائم خطر را هشدار بده."
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={os.environ.get('GEMINI_API_KEY')}"
+
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": f"""
+تو یک متخصص زنان و مامایی با تجربه هستی.
+به سوالات بارداری، ناباروری، آزمایش‌ها، سونوگرافی و بیماری‌های زنان پاسخ علمی و قابل فهم بده.
+اگر علائم خطر وجود داشت هشدار بده
                         )
                     },
                     {"role": "user", "content": user_text}
