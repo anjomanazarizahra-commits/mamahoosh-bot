@@ -1,28 +1,24 @@
-def ask_ai(text):
-    try:
-        r = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "gpt-3.5-turbo",
-                "messages": [
-                    {"role": "system", "content": "تو دستیار مامایی هستی"},
-                    {"role": "user", "content": text}
-                ]
-            },
-            timeout=20
-        )
+from flask import Flask, request
+import os
+import requests
 
-        data = r.json()
+app = Flask(__name__)
 
-        # 👇 این خط جلوی کرش رو می‌گیره
-        if "choices" not in data:
-            return f"API Error: {data}"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-        return data["choices"][0]["message"]["content"]
+def send(chat_id, text):
+    requests.post(
+        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+        json={"chat_id": chat_id, "text": text}
+    )
 
-    except Exception as e:
-        return f"خطای سرور: {str(e)}"
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    data = request.get_json()
+
+    msg = data.get("message", {})
+    chat_id = msg.get("chat", {}).get("id")
+
+    send(chat_id, "ربات فعاله ✅")
+
+    return "ok"
