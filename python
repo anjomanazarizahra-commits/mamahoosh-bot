@@ -1,1 +1,1 @@
-
+return str(r.json())
