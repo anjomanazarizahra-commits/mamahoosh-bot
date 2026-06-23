@@ -20,7 +20,13 @@ def ask_ai(user_text):
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
     }
+import requests
+import os
 
+token = os.environ.get("BOT_TOKEN")
+url = os.environ.get("WEBHOOK_URL")
+
+requests.get(f"https://api.telegram.org/bot{token}/setWebhook?url={url}/webhook")
     system_prompt = """
     تو یک دستیار تخصصی مامایی و زنان هستی.
     پاسخ‌ها باید:
