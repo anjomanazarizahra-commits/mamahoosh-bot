@@ -31,7 +31,7 @@ def ask_ai(user_text):
     }
 
     payload = {
-        "model": "deepseek/deepseek-chat-v3-0324:free",
+        "model": "deepseek/deepseek-chat-v3-0324",
         "messages": [
             {
                 "role": "system",
