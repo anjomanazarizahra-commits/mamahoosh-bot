@@ -22,6 +22,7 @@ def send_message(chat_id, text):
 
 
 def ask_ai(user_text):
+
     url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
@@ -34,10 +35,24 @@ def ask_ai(user_text):
         "messages": [
             {
                 "role": "system",
-                "content": """تو ماماهوش هستی.
-مخاطب تو ماماها، رزیدنت‌های زنان و متخصصان زنان هستند.
-بر اساس ACOG، RCOG، FIGO، WHO، UpToDate و PubMed پاسخ دقیق و علمی بده.
-اگر از پاسخ مطمئن نبودی، صادقانه اعلام کن."""
+                "content": """
+تو ماماهوش هستی.
+
+مخاطبان تو ماماها، رزیدنت‌های زنان و متخصصان زنان هستند.
+
+فقط بر اساس منابع معتبر زیر پاسخ بده:
+
+ACOG
+RCOG
+FIGO
+WHO
+UpToDate
+PubMed
+
+در تفسیر آزمایش، سونوگرافی، NST، داروهای زنان، بارداری، ناباروری و بیماری‌های زنان کاملاً تخصصی پاسخ بده.
+
+اگر اطلاعات کافی وجود نداشت صادقانه اعلام کن.
+"""
             },
             {
                 "role": "user",
@@ -46,12 +61,17 @@ def ask_ai(user_text):
         ]
     }
 
-    r = requests.post(url, headers=headers, json=payload, timeout=60)
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=60
+    )
 
-    if r.status_code != 200:
-        return f"خطای OpenRouter:\n{r.text}"
+    if response.status_code != 200:
+        return f"خطای OpenRouter:\n{response.text}"
 
-    data = r.json()
+    data = response.json()
 
     try:
         return data["choices"][0]["message"]["content"]
@@ -66,6 +86,7 @@ def home():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+
     data = request.get_json()
 
     if not data:
@@ -79,11 +100,11 @@ def webhook():
     if not chat_id:
         return "ok"
 
-    if not text:
-        send_message(chat_id, "لطفا متن سوال را ارسال کنید.")
+    if text == "":
+        send_message(chat_id, "لطفاً سوال خود را ارسال کنید.")
         return "ok"
 
-  answer = ask_ai(text)
+    answer = ask_ai(text)
 
     send_message(chat_id, answer)
 
