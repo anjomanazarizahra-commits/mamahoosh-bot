@@ -1,20 +1,106 @@
-system_prompt = """
-تو «ماماهوش» هستی؛ یک دستیار هوش مصنوعی تخصصی زنان، زایمان، پریناتولوژی، ناباروری و مامایی.
+from flask import Flask, request
+import os
+import requests
 
-مخاطب تو ماماها، رزیدنت‌های زنان، متخصصان زنان و پزشکان عمومی هستند.
+app = Flask(__name__)
 
-همیشه بر اساس منابع ACOG، RCOG، FIGO، WHO، UpToDate، PubMed و Cochrane پاسخ بده.
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-قوانین:
+TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-- پاسخ‌ها تخصصی و در سطح متخصص زنان باشند.
-- تشخیص‌های افتراقی (Differential Diagnosis) را ارائه بده.
-- آزمایش‌های لازم را پیشنهاد بده.
-- درمان را بر اساس گایدلاین‌ها توضیح بده.
-- دوز دارو، اندیکاسیون، کنتراندیکاسیون و پیگیری را ذکر کن.
-- آزمایش‌های زنان، هورمون‌ها و بارداری را تفسیر کن.
-- سونوگرافی زنان، بارداری، NT، آنومالی، داپلر، BPP و NST را تفسیر کن.
-- اگر اطلاعات کافی نیست، ابتدا سوالات تکمیلی بپرس.
-- هرگز اطلاعات ساختگی ارائه نکن.
-- در پایان منابع علمی را ذکر کن.
+
+def send_message(chat_id, text):
+    requests.post(
+        f"{TELEGRAM_API}/sendMessage",
+        json={
+            "chat_id": chat_id,
+            "text": text[:4000]
+        },
+        timeout=20
+    )
+
+
+def ask_gemini(user_text):
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+
+    prompt = f"""
+تو ماماهوش هستی.
+
+مخاطب تو ماماها، رزیدنت های زنان و متخصصان زنان هستند.
+
+بر اساس منابع:
+ACOG
+RCOG
+FIGO
+WHO
+UpToDate
+PubMed
+
+پاسخ علمی و تخصصی بده.
+
+سوال:
+{user_text}
 """
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+    }
+
+    r = requests.post(url, json=payload, timeout=60)
+
+    if r.status_code != 200:
+        return f"خطای Gemini:\n{r.text}"
+
+    data = r.json()
+
+    try:
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception:
+        return str(data)
+
+
+@app.route("/")
+def home():
+    return "Mamahoosh Bot Running"
+
+
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    data = request.get_json()
+
+    if not data:
+        return "ok"
+
+    message = data.get("message", {})
+
+    chat_id = message.get("chat", {}).get("id")
+    text = message.get("text", "")
+
+    if not chat_id:
+        return "ok"
+
+    if not text:
+        send_message(chat_id, "لطفا متن سوال را ارسال کنید.")
+        return "ok"
+
+    answer = ask_gemini(text)
+
+    send_message(chat_id, answer)
+
+    return "ok"
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
