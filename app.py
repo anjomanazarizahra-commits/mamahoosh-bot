@@ -21,52 +21,40 @@ def send_message(chat_id, text):
     )
 
 
-def ask_gemini(user_text):
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-    )
+def ask_ai(user_text):
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
-    prompt = f"""
-تو ماماهوش هستی.
-
-مخاطب تو ماماها، رزیدنت های زنان و متخصصان زنان هستند.
-
-بر اساس منابع:
-ACOG
-RCOG
-FIGO
-WHO
-UpToDate
-PubMed
-
-پاسخ علمی و تخصصی بده.
-
-سوال:
-{user_text}
-"""
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
 
     payload = {
-        "contents": [
+        "model": "deepseek/deepseek-chat-v3-0324:free",
+        "messages": [
             {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
+                "role": "system",
+                "content": """تو ماماهوش هستی.
+مخاطب تو ماماها، رزیدنت‌های زنان و متخصصان زنان هستند.
+بر اساس ACOG، RCOG، FIGO، WHO، UpToDate و PubMed پاسخ دقیق و علمی بده.
+اگر از پاسخ مطمئن نبودی، صادقانه اعلام کن."""
+            },
+            {
+                "role": "user",
+                "content": user_text
             }
         ]
     }
 
-    r = requests.post(url, json=payload, timeout=60)
+    r = requests.post(url, headers=headers, json=payload, timeout=60)
 
     if r.status_code != 200:
-        return f"خطای Gemini:\n{r.text}"
+        return f"خطای OpenRouter:\n{r.text}"
 
     data = r.json()
 
     try:
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+        return data["choices"][0]["message"]["content"]
     except Exception:
         return str(data)
 
