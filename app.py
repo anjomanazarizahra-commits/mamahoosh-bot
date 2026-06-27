@@ -5,7 +5,7 @@ import requests
 app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 
 TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -83,7 +83,7 @@ def webhook():
         send_message(chat_id, "لطفا متن سوال را ارسال کنید.")
         return "ok"
 
-    answer = ask_gemini(text)
+  answer = ask_ai(text)
 
     send_message(chat_id, answer)
 
